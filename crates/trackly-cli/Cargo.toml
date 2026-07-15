@@ -1,0 +1,20 @@
+[package]
+name = "trackly-cli"
+description = "The `trackly` command — agent-native progress tracking that lives in a repo like git."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "trackly"
+path = "src/main.rs"
+
+[dependencies]
+trackly-core = { path = "../trackly-core" }
+serde.workspace = true
+serde_json.workspace = true
+chrono.workspace = true
+anyhow.workspace = true
+clap = { version = "4", features = ["derive"] }
