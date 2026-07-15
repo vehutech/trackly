@@ -18,6 +18,9 @@ dist-ssr
 # Trackly demo/report artifacts
 trackly-report.html
 
+# Trackly's own local state (this repo shouldn't track a Trackly plan of itself)
+.trackly/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

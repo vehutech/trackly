@@ -16,6 +16,20 @@ agent does a task ──▶  Trackly marks it done     (execution state)
 you run report    ──▶  Trackly renders a PDF     (the deliverable)
 ```
 
+## See it
+
+`trackly status` — the terminal scoreboard, grouped by phase:
+
+<p align="center">
+  <img src="docs/screenshots/status.png" alt="trackly status terminal output showing 40.9% complete across three phases" width="620">
+</p>
+
+`trackly report` — a print-ready HTML document (→ Save as PDF):
+
+<p align="center">
+  <img src="docs/screenshots/report.png" alt="Trackly HTML progress report with KPI tiles and per-phase task detail" width="720">
+</p>
+
 ---
 
 ## Why
@@ -110,6 +124,43 @@ trackly task block   t7 --evidence "waiting on vendor API keys"
 | `trackly status` | Print the terminal scoreboard (%, done/partial/open, by group). |
 | `trackly report [--out FILE] [--subtitle "Org"]` | Write a print-ready HTML report. |
 
+## Native agent integration (MCP)
+
+Shelling out to the CLI works with any agent. For a first-class integration, Trackly
+also ships an **MCP server** (`trackly-mcp`) — installed alongside the CLI — that agents
+like Claude Code, Cursor, and Windsurf connect to and call natively.
+
+Add it to **Claude Code**:
+
+```sh
+claude mcp add trackly -- trackly-mcp
+```
+
+…or drop a `.mcp.json` in your project root (works for Claude Code and, with the same
+shape, other MCP clients):
+
+```json
+{
+  "mcpServers": {
+    "trackly": { "command": "trackly-mcp" }
+  }
+}
+```
+
+The server operates on the current working directory (or `$TRACKLY_REPO`) and exposes
+these tools:
+
+| Tool | Purpose |
+|---|---|
+| `set_plan` | Record the plan (title + tasks) — call it once a plan is formed. |
+| `add_task` | Append a single task. |
+| `update_task` | Set a task's status (`done`/`partial`/…), with optional evidence. |
+| `get_status` | Return the current scoreboard as text. |
+| `generate_report` | Write the HTML progress report and return its path. |
+
+Now the agent hands over its plan the moment it forms one, and marks tasks as it works —
+no shell calls, no reminders.
+
 ## Plan format
 
 Trackly reads ordinary markdown checklists — nothing new to learn:
@@ -151,24 +202,60 @@ Trackly keeps a `.trackly/` directory in your repo, mirroring how `.git/` sits t
 
 Both are human-readable. Commit them if you want the plan and its history versioned.
 
+## Updating & versioning
+
+Trackly follows [semantic versioning](https://semver.org). Releases are cut by pushing
+a `vX.Y.Z` git tag, which builds and publishes the cross-platform binaries automatically.
+
+**Updating the CLI** — pick whichever matches how you installed:
+
+```sh
+# installed via the one-liner? just re-run it — it fetches the latest release
+curl -fsSL https://raw.githubusercontent.com/vehutech/trackly/main/scripts/install.sh | sh
+
+# built from source? pull and rebuild
+git pull && cargo build --release -p trackly-cli
+```
+
+Check what you're on with `trackly --version`, and see the newest release on the
+[releases page](https://github.com/vehutech/trackly/releases). The `.trackly/` store
+format is forward-compatible within a major version, so upgrading never breaks an
+existing plan.
+
+*Planned:* a built-in `trackly self-update` (download + swap the binary in place) and a
+Homebrew tap so `brew upgrade trackly` works.
+
+**Auto-updating the desktop app** — the planned Tauri app will ship with Tauri's
+[updater plugin](https://tauri.app/plugin/updater/), which is the standard mechanism for
+this: on launch it checks a release feed (GitHub Releases), and if a newer, **signed**
+build exists it downloads and applies it, prompting the user first. Updates are verified
+against a public key baked into the app, so a tampered update is rejected. This is how a
+native app updates itself without the user ever touching a terminal — the CLI's story is
+"re-run the installer / `brew upgrade`," the desktop's is "it updates itself, verified."
+
 ## Architecture
 
 A Rust workspace so one engine backs every surface:
 
 - **`crates/trackly-core`** — the plan model, store, scoring, markdown parsing, and
   HTML report renderer. UI-agnostic.
-- **`crates/trackly-cli`** — the `trackly` command (this is v0.1).
+- **`crates/trackly-cli`** — the `trackly` command.
+- **`crates/trackly-mcp`** — the `trackly-mcp` MCP server (agent integration).
 - **`src-tauri` + `src`** — the future desktop app (see roadmap).
+
+Both the CLI and the MCP server are thin shells over `trackly-core` — one engine, three
+front doors.
 
 ## Roadmap
 
-- **v0.1 (now)** — the `trackly` CLI: plan capture, status, HTML/PDF report.
-- **Next — MCP server** — a thin wrapper over `trackly-core` so agents call
-  `set_plan` / `update_task` natively instead of shelling out.
-- **Git as evidence** — an opt-in post-commit hook that auto-snapshots and links
+- **Done — the `trackly` CLI**: plan capture, status, HTML/PDF report.
+- **Done — prebuilt binaries**: cross-platform releases + one-line installer, zero Rust.
+- **Done — MCP server**: agents call `set_plan` / `update_task` natively.
+- **Next — git as evidence**: an opt-in post-commit hook that auto-snapshots and links
   commit hashes/dates to tasks.
-- **The "like GitHub" desktop app** — the Tauri app becomes a machine-wide view that
-  discovers all your Trackly repos, shows dashboards, and exports reports.
+- **Next — Homebrew tap + `trackly self-update`** for effortless CLI upgrades.
+- **Later — the "like GitHub" desktop app**: the Tauri app becomes a machine-wide view
+  that discovers all your Trackly repos, shows dashboards, and exports reports.
 
 ## License
 

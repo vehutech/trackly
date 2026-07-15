@@ -57,8 +57,10 @@ tar -xzf "$tmp/$asset" -C "$tmp"
 
 mkdir -p "$BIN_DIR"
 install -m 0755 "$tmp/trackly" "$BIN_DIR/trackly"
+# The MCP server ships in the same archive (for native agent integration).
+[ -f "$tmp/trackly-mcp" ] && install -m 0755 "$tmp/trackly-mcp" "$BIN_DIR/trackly-mcp"
 
-printf '\n✓ installed to %s/trackly\n' "$BIN_DIR"
+printf '\n✓ installed trackly (and trackly-mcp) to %s\n' "$BIN_DIR"
 case ":$PATH:" in
   *":$BIN_DIR:"*) : ;;
   *) printf '\n! %s is not on your PATH. Add this to your shell profile:\n    export PATH="%s:$PATH"\n' "$BIN_DIR" "$BIN_DIR" ;;

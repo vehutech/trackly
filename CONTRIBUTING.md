@@ -29,12 +29,13 @@ cargo run -p trackly-cli -- --help   # run the CLI locally
 crates/
   trackly-core/   # plan model, store, scoring, markdown parsing, HTML report — UI-agnostic
   trackly-cli/    # the `trackly` command (thin shell over the core)
+  trackly-mcp/    # the `trackly-mcp` MCP server (thin shell over the core)
 src-tauri/, src/  # the future "like GitHub" desktop app (see the roadmap in the README)
 ```
 
-**Rule of thumb:** logic that a future MCP server or the desktop app would also need
-belongs in `trackly-core`. Keep `trackly-cli` thin — argument parsing and terminal
-presentation only.
+**Rule of thumb:** logic that more than one front door would need belongs in
+`trackly-core`. Keep `trackly-cli` and `trackly-mcp` thin — the CLI is argument parsing
+and terminal presentation; the MCP server is protocol plumbing and tool schemas.
 
 ## Before you open a PR
 

@@ -43,7 +43,7 @@ jobs:
           key: ${{ runner.os }}-release-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Build
-        run: cargo build --release -p trackly-cli --target ${{ matrix.target }}
+        run: cargo build --release -p trackly-cli -p trackly-mcp --target ${{ matrix.target }}
 
       - name: Package (Unix)
         if: runner.os != 'Windows'
@@ -51,7 +51,7 @@ jobs:
         run: |
           name="trackly-${GITHUB_REF_NAME}-${{ matrix.target }}"
           mkdir -p dist
-          tar -czf "dist/${name}.tar.gz" -C "target/${{ matrix.target }}/release" trackly
+          tar -czf "dist/${name}.tar.gz" -C "target/${{ matrix.target }}/release" trackly trackly-mcp
           shasum -a 256 "dist/${name}.tar.gz" > "dist/${name}.tar.gz.sha256"
 
       - name: Package (Windows)
@@ -60,7 +60,9 @@ jobs:
         run: |
           name="trackly-${GITHUB_REF_NAME}-${{ matrix.target }}"
           mkdir -p dist
-          7z a "dist/${name}.zip" "./target/${{ matrix.target }}/release/trackly.exe"
+          7z a "dist/${name}.zip" \
+            "./target/${{ matrix.target }}/release/trackly.exe" \
+            "./target/${{ matrix.target }}/release/trackly-mcp.exe"
           sha256sum "dist/${name}.zip" > "dist/${name}.zip.sha256"
 
       - name: Upload to release

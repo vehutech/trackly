@@ -1,0 +1,19 @@
+[package]
+name = "trackly-mcp"
+description = "Model Context Protocol server for Trackly — lets an agent push its plan and progress natively."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "trackly-mcp"
+path = "src/main.rs"
+
+[dependencies]
+trackly-core = { path = "../trackly-core" }
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+chrono.workspace = true

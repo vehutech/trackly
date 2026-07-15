@@ -219,9 +219,9 @@ footer.site { border-top: 1px solid var(--line); padding: 40px 0; color: var(--m
 <pre class="term"><span class="p"># downloads the latest prebuilt binary for your platform</span>
 <span class="c">curl -fsSL https://raw.githubusercontent.com/vehutech/trackly/main/scripts/install.sh | sh</span>
 
-<span class="p"># verify</span>
+<span class="p"># verify (installs `trackly` and the `trackly-mcp` agent server)</span>
 <span class="c">trackly --version</span>
-<span class="o m">trackly 0.1.0</span></pre>
+<span class="o m">trackly 0.2.0</span></pre>
     </div>
     <p class="sub" style="margin:22px 0 12px;">Prefer to do it by hand? Download an archive from the
       <a href="https://github.com/vehutech/trackly/releases/latest">latest release</a> —
@@ -362,7 +362,7 @@ src-tauri/, src/  <span class="g-mut"># future desktop app</span></pre>
     <h2>Where it's going</h2>
     <div class="road">
       <div class="r"><span class="pill now">NOW</span><div><div class="t">v0.1 — the CLI</div><div class="d">Plan capture, task tracking, terminal status, HTML/PDF report.</div></div></div>
-      <div class="r"><span class="pill next">NEXT</span><div><div class="t">MCP server</div><div class="d">A thin wrapper over the core so agents call <code>set_plan</code> / <code>update_task</code> natively.</div></div></div>
+      <div class="r"><span class="pill now">NOW</span><div><div class="t">MCP server</div><div class="d">Ships as <code>trackly-mcp</code> — agents (Claude Code, Cursor, Windsurf) call <code>set_plan</code> / <code>update_task</code> natively. <code>claude mcp add trackly -- trackly-mcp</code></div></div></div>
       <div class="r"><span class="pill now">NOW</span><div><div class="t">Prebuilt binaries</div><div class="d">Cross-platform release archives for macOS, Linux &amp; Windows + a one-line installer — zero Rust. <code>brew</code>/<code>npx</code> next.</div></div></div>
       <div class="r"><span class="pill later">LATER</span><div><div class="t">Git as evidence</div><div class="d">An opt-in post-commit hook that auto-snapshots and links commit hashes to tasks.</div></div></div>
       <div class="r"><span class="pill later">LATER</span><div><div class="t">The "like GitHub" desktop app</div><div class="d">A machine-wide view that discovers all your Trackly repos and exports reports.</div></div></div>
