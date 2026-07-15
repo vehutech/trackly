@@ -181,7 +181,7 @@ footer.site { border-top: 1px solid var(--line); padding: 40px 0; color: var(--m
       <a class="btn" href="#install">Get started</a>
       <a class="btn ghost" href="https://github.com/vehutech/trackly">Star on GitHub ★</a>
     </div>
-    <div class="subnote">v0.1 — the CLI. Prebuilt binaries &amp; a desktop app are on the roadmap.</div>
+    <div class="subnote">v0.1 — the CLI, with prebuilt binaries for macOS, Linux &amp; Windows. A desktop app is on the roadmap.</div>
 
     <div class="flow">
       <div class="step"><div class="k">1 · Agent</div><div class="v">Forms a plan</div><div class="d">before it starts work</div></div>
@@ -212,19 +212,27 @@ footer.site { border-top: 1px solid var(--line); padding: 40px 0; color: var(--m
   <section id="install">
     <div class="eyebrow">Installation</div>
     <h2>Install once, use in every repo</h2>
-    <p class="sub">Trackly is a single native binary. End users never need Rust to <em>run</em> it — that's only for building from
-      source today. Prebuilt binaries (<code>brew</code> / <code>npx</code> / releases) are next on the roadmap.</p>
+    <p class="sub">Trackly is a single native binary. <strong>End users never need Rust.</strong>
+      One line on macOS / Linux — or grab a prebuilt archive for any platform.</p>
     <div class="terminal">
-      <div class="term-bar"><i></i><i></i><i></i><span>build &amp; install</span></div>
-<pre class="term"><span class="p"># one-time: build the binary and put it on your PATH</span>
-<span class="c">git clone https://github.com/vehutech/trackly</span>
-<span class="c">cd trackly</span>
-<span class="c">cargo build --release -p trackly-cli</span>
-<span class="c">cp target/release/trackly /usr/local/bin/</span>   <span class="p"># or anywhere on PATH</span>
+      <div class="term-bar"><i></i><i></i><i></i><span>install — macOS / Linux</span></div>
+<pre class="term"><span class="p"># downloads the latest prebuilt binary for your platform</span>
+<span class="c">curl -fsSL https://raw.githubusercontent.com/vehutech/trackly/main/scripts/install.sh | sh</span>
 
 <span class="p"># verify</span>
 <span class="c">trackly --version</span>
 <span class="o m">trackly 0.1.0</span></pre>
+    </div>
+    <p class="sub" style="margin:22px 0 12px;">Prefer to do it by hand? Download an archive from the
+      <a href="https://github.com/vehutech/trackly/releases/latest">latest release</a> —
+      <code>aarch64</code>/<code>x86_64</code> macOS, <code>x86_64</code> Linux, and <code>x86_64</code> Windows —
+      or build from source:</p>
+    <div class="terminal">
+      <div class="term-bar"><i></i><i></i><i></i><span>build from source</span></div>
+<pre class="term"><span class="c">git clone https://github.com/vehutech/trackly</span>
+<span class="c">cd trackly</span>
+<span class="c">cargo build --release -p trackly-cli</span>
+<span class="c">cp target/release/trackly /usr/local/bin/</span>   <span class="p"># or anywhere on PATH</span></pre>
     </div>
   </section>
 
@@ -355,7 +363,7 @@ src-tauri/, src/  <span class="g-mut"># future desktop app</span></pre>
     <div class="road">
       <div class="r"><span class="pill now">NOW</span><div><div class="t">v0.1 — the CLI</div><div class="d">Plan capture, task tracking, terminal status, HTML/PDF report.</div></div></div>
       <div class="r"><span class="pill next">NEXT</span><div><div class="t">MCP server</div><div class="d">A thin wrapper over the core so agents call <code>set_plan</code> / <code>update_task</code> natively.</div></div></div>
-      <div class="r"><span class="pill next">NEXT</span><div><div class="t">Prebuilt binaries</div><div class="d">Cross-platform releases + <code>brew</code>/<code>npx</code> — install with zero Rust.</div></div></div>
+      <div class="r"><span class="pill now">NOW</span><div><div class="t">Prebuilt binaries</div><div class="d">Cross-platform release archives for macOS, Linux &amp; Windows + a one-line installer — zero Rust. <code>brew</code>/<code>npx</code> next.</div></div></div>
       <div class="r"><span class="pill later">LATER</span><div><div class="t">Git as evidence</div><div class="d">An opt-in post-commit hook that auto-snapshots and links commit hashes to tasks.</div></div></div>
       <div class="r"><span class="pill later">LATER</span><div><div class="t">The "like GitHub" desktop app</div><div class="d">A machine-wide view that discovers all your Trackly repos and exports reports.</div></div></div>
     </div>

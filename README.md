@@ -30,12 +30,28 @@ Because it snapshots state every time it's touched, Trackly also builds a histor
 
 ## Install
 
-Trackly is a single native binary. **End users never need Rust installed** — that's
-only for building from source today. (Prebuilt binaries and `brew`/`npx` install are
-on the roadmap.)
+Trackly is a single native binary. **End users never need Rust installed.**
+
+**One-line install** (macOS / Linux) — downloads the latest prebuilt binary:
 
 ```sh
-# From source (requires the Rust toolchain)
+curl -fsSL https://raw.githubusercontent.com/vehutech/trackly/main/scripts/install.sh | sh
+```
+
+**Manual download** — grab the archive for your platform from the
+[latest release](https://github.com/vehutech/trackly/releases/latest), unpack it, and
+put `trackly` on your PATH. Prebuilt targets:
+
+| Platform | Asset |
+|---|---|
+| macOS (Apple Silicon) | `trackly-<ver>-aarch64-apple-darwin.tar.gz` |
+| macOS (Intel) | `trackly-<ver>-x86_64-apple-darwin.tar.gz` |
+| Linux (x86_64) | `trackly-<ver>-x86_64-unknown-linux-gnu.tar.gz` |
+| Windows (x86_64) | `trackly-<ver>-x86_64-pc-windows-msvc.zip` |
+
+**From source** (requires the Rust toolchain):
+
+```sh
 git clone https://github.com/vehutech/trackly
 cd trackly
 cargo build --release -p trackly-cli
