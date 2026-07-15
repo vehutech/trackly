@@ -1,6 +1,6 @@
 [package]
 name = "trackly-desktop"
-version = "0.3.0"
+version = "0.4.0"
 description = "Trackly desktop — a machine-wide view of your tracked repos."
 authors = ["Trackly contributors"]
 edition = "2021"
