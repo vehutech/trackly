@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trackly — agent-native progress tracking that lives in a repo like git</title>
+<meta name="description" content="Trackly rides alongside a coding agent: it captures the plan, measures weighted completion, and generates printable progress reports. Open source, MIT.">
+<style>
+:root {
+  --bg: #ffffff; --surface: #f7f8fa; --card: #ffffff; --ink: #1f2328; --muted: #6b7280;
+  --line: #e5e7eb; --brand: #1f6feb; --done: #1a7f37; --partial: #b45309; --blocked: #b91c1c;
+  --done-bg: #eaf5ec; --partial-bg: #fbf0e2; --brand-bg: #eaf1fb;
+  --code-bg: #0f1420; --code-ink: #e6edf3; --code-muted: #8b98a9;
+  --radius: 12px; --maxw: 1000px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b0e14; --surface: #11151d; --card: #131824; --ink: #e6edf3; --muted: #9aa4b2;
+    --line: #232a36; --brand: #4f9dff; --done: #3fb950; --partial: #d29922; --blocked: #f85149;
+    --done-bg: #0f2417; --partial-bg: #241a0d; --brand-bg: #0d1c33;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0b0e14; --surface: #11151d; --card: #131824; --ink: #e6edf3; --muted: #9aa4b2;
+  --line: #232a36; --brand: #4f9dff; --done: #3fb950; --partial: #d29922; --blocked: #f85149;
+  --done-bg: #0f2417; --partial-bg: #241a0d; --brand-bg: #0d1c33;
+}
+:root[data-theme="light"] {
+  --bg: #ffffff; --surface: #f7f8fa; --card: #ffffff; --ink: #1f2328; --muted: #6b7280;
+  --line: #e5e7eb; --brand: #1f6feb; --done: #1a7f37; --partial: #b45309; --blocked: #b91c1c;
+  --done-bg: #eaf5ec; --partial-bg: #fbf0e2; --brand-bg: #eaf1fb;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--brand); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+code, pre, .mono { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; }
+
+/* Nav */
+header.nav { position: sticky; top: 0; z-index: 10; background: var(--bg);
+  border-bottom: 1px solid var(--line); }
+.nav-inner { display: flex; align-items: center; gap: 20px; height: 60px; }
+.brand { font-weight: 700; font-size: 18px; letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px; }
+.brand .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--done); box-shadow: 0 0 0 3px var(--done-bg); }
+.nav-links { margin-left: auto; display: flex; gap: 22px; align-items: center; font-size: 14px; }
+.nav-links a { color: var(--muted); }
+.nav-links a:hover { color: var(--ink); text-decoration: none; }
+.btn { display: inline-block; background: var(--brand); color: #fff; padding: 9px 16px; border-radius: 8px;
+  font-weight: 600; font-size: 14px; border: 1px solid transparent; }
+.btn:hover { text-decoration: none; filter: brightness(1.06); }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+#theme { cursor: pointer; background: none; border: 1px solid var(--line); color: var(--muted);
+  border-radius: 8px; width: 34px; height: 34px; font-size: 15px; }
+
+/* Hero */
+.hero { padding: 76px 0 40px; text-align: center; }
+.tag { display: inline-block; font-size: 13px; color: var(--brand); background: var(--brand-bg);
+  border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent); padding: 5px 12px; border-radius: 999px; margin-bottom: 22px; }
+.hero h1 { font-size: clamp(34px, 6vw, 54px); line-height: 1.06; letter-spacing: -0.03em; margin: 0 0 18px; font-weight: 800; }
+.hero h1 .accent { color: var(--brand); }
+.hero p.lead { font-size: clamp(17px, 2.4vw, 21px); color: var(--muted); max-width: 640px; margin: 0 auto 30px; }
+.cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.subnote { margin-top: 16px; font-size: 13px; color: var(--muted); }
+
+/* Flow diagram */
+.flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 10px; align-items: stretch;
+  max-width: 820px; margin: 46px auto 0; text-align: left; }
+.flow .step { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
+.flow .step .k { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 6px; }
+.flow .step .v { font-weight: 600; font-size: 15px; }
+.flow .step .d { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.flow .arrow { align-self: center; color: var(--muted); font-size: 22px; }
+@media (max-width: 720px) { .flow { grid-template-columns: 1fr; } .flow .arrow { transform: rotate(90deg); justify-self: center; } }
+
+/* Sections */
+section { padding: 56px 0; border-top: 1px solid var(--line); }
+section h2 { font-size: clamp(24px, 3.4vw, 32px); letter-spacing: -0.02em; margin: 0 0 10px; font-weight: 700; }
+section .sub { color: var(--muted); margin: 0 0 30px; max-width: 640px; }
+.eyebrow { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--brand); margin-bottom: 10px; }
+
+/* Steps (how it works) */
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+@media (max-width: 760px) { .cards { grid-template-columns: 1fr; } }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; }
+.card .num { width: 30px; height: 30px; border-radius: 8px; background: var(--brand-bg); color: var(--brand);
+  display: grid; place-items: center; font-weight: 700; margin-bottom: 12px; }
+.card h3 { margin: 0 0 6px; font-size: 17px; }
+.card p { margin: 0; color: var(--muted); font-size: 14.5px; }
+
+/* Terminal */
+.terminal { background: var(--code-bg); border-radius: var(--radius); overflow: hidden; border: 1px solid #1c2431;
+  box-shadow: 0 18px 40px -24px rgba(0,0,0,0.5); }
+.term-bar { display: flex; align-items: center; gap: 7px; padding: 11px 14px; border-bottom: 1px solid #1c2431; }
+.term-bar i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+.term-bar i:nth-child(1){ background:#ff5f57; } .term-bar i:nth-child(2){ background:#febc2e; } .term-bar i:nth-child(3){ background:#28c840; }
+.term-bar span { margin-left: 8px; color: var(--code-muted); font-size: 12px; }
+pre.term { margin: 0; padding: 18px 18px 22px; color: var(--code-ink); font-size: 13.5px; line-height: 1.7; overflow-x: auto; }
+pre.term .c { color: #6ee7b7; } /* command */
+pre.term .p { color: #7d8aa3; } /* prompt/comment */
+pre.term .o { color: #cdd6e4; } /* output */
+pre.term .g { color: #3fb950; } pre.term .y { color: #d29922; } pre.term .b { color: #4f9dff; } pre.term .m { color: #8b98a9; }
+
+/* Command table */
+.table { width: 100%; border-collapse: collapse; font-size: 14.5px; overflow: hidden; border-radius: var(--radius);
+  border: 1px solid var(--line); }
+.table th, .table td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.table th { background: var(--surface); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.table tr:last-child td { border-bottom: 0; }
+.table td code { background: var(--surface); padding: 2px 7px; border-radius: 6px; font-size: 13px; white-space: nowrap; }
+.table-scroll { overflow-x: auto; }
+
+/* Two-col */
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 800px) { .two { grid-template-columns: 1fr; } }
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; }
+.panel h3 { margin: 0 0 12px; font-size: 16px; }
+pre.block { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px;
+  font-size: 13px; line-height: 1.7; overflow-x: auto; }
+.formula { font-size: 14px; }
+.legend-row { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 14px; font-size: 13.5px; }
+.legend-row span b { font-weight: 600; }
+.g-done { color: var(--done); } .g-part { color: var(--partial); } .g-block { color: var(--blocked); } .g-mut { color: var(--muted); }
+
+/* Tools grid */
+.tools { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.tool { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+.tool .t { font-weight: 600; font-size: 14.5px; }
+.tool .d { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+
+/* Roadmap */
+.road { display: grid; gap: 12px; }
+.road .r { display: flex; gap: 14px; align-items: flex-start; background: var(--card); border: 1px solid var(--line);
+  border-radius: 10px; padding: 16px 18px; }
+.road .pill { flex: none; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; margin-top: 1px; }
+.pill.now { background: var(--done-bg); color: var(--done); }
+.pill.next { background: var(--brand-bg); color: var(--brand); }
+.pill.later { background: var(--surface); color: var(--muted); }
+.road .r .t { font-weight: 600; } .road .r .d { color: var(--muted); font-size: 14px; margin-top: 2px; }
+
+/* Footer */
+footer.site { border-top: 1px solid var(--line); padding: 40px 0; color: var(--muted); font-size: 14px; }
+.foot-inner { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; }
+
+.center-cta { text-align: center; padding: 66px 0; }
+.center-cta h2 { margin-bottom: 8px; }
+.center-cta .sub { margin: 0 auto 24px; }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <div class="brand"><span class="dot"></span> Trackly</div>
+    <nav class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#install">Install</a>
+      <a href="#commands">Commands</a>
+      <a href="#format">Plan format</a>
+      <a href="#contribute">Contribute</a>
+      <a class="btn ghost" href="https://github.com/vehutech/trackly">GitHub</a>
+      <button id="theme" title="Toggle theme" aria-label="Toggle theme">◐</button>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="hero">
+    <span class="tag">Open source · MIT · written in Rust</span>
+    <h1>Progress tracking that lives in a repo,<br><span class="accent">like git.</span></h1>
+    <p class="lead">Trackly rides alongside your coding agent. The moment it forms a plan, Trackly captures it —
+      then measures weighted completion and turns it into a printable progress report. Silent until you call it. No nagging, no daemon.</p>
+    <div class="cta">
+      <a class="btn" href="#install">Get started</a>
+      <a class="btn ghost" href="https://github.com/vehutech/trackly">Star on GitHub ★</a>
+    </div>
+    <div class="subnote">v0.1 — the CLI. Prebuilt binaries &amp; a desktop app are on the roadmap.</div>
+
+    <div class="flow">
+      <div class="step"><div class="k">1 · Agent</div><div class="v">Forms a plan</div><div class="d">before it starts work</div></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="k">2 · Trackly</div><div class="v">Records &amp; measures</div><div class="d">weighted completion</div></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="k">3 · You</div><div class="v">Get a report</div><div class="d">terminal + printable PDF</div></div>
+    </div>
+  </div>
+
+  <!-- HOW -->
+  <section id="how">
+    <div class="eyebrow">How it works</div>
+    <h2>Three moves, and it fits how you already work</h2>
+    <p class="sub">Most repos already have a plan — <code>plan.md</code>, <code>tasks.md</code>, an agent's todo list.
+      Trackly reads it, tracks execution against it, and shows how far along you are.</p>
+    <div class="cards">
+      <div class="card"><div class="num">1</div><h3>Capture the plan</h3>
+        <p>The agent pushes its plan as a markdown checklist or JSON. Or Trackly seeds one from a doc already in your repo.</p></div>
+      <div class="card"><div class="num">2</div><h3>Track execution</h3>
+        <p>As tasks land, they're marked done, partial, or blocked — with an optional commit hash or note as evidence.</p></div>
+      <div class="card"><div class="num">3</div><h3>Report it</h3>
+        <p><code>trackly status</code> for a terminal scoreboard; <code>trackly report</code> for a clean HTML doc you print to PDF.</p></div>
+    </div>
+  </section>
+
+  <!-- INSTALL -->
+  <section id="install">
+    <div class="eyebrow">Installation</div>
+    <h2>Install once, use in every repo</h2>
+    <p class="sub">Trackly is a single native binary. End users never need Rust to <em>run</em> it — that's only for building from
+      source today. Prebuilt binaries (<code>brew</code> / <code>npx</code> / releases) are next on the roadmap.</p>
+    <div class="terminal">
+      <div class="term-bar"><i></i><i></i><i></i><span>build &amp; install</span></div>
+<pre class="term"><span class="p"># one-time: build the binary and put it on your PATH</span>
+<span class="c">git clone https://github.com/vehutech/trackly</span>
+<span class="c">cd trackly</span>
+<span class="c">cargo build --release -p trackly-cli</span>
+<span class="c">cp target/release/trackly /usr/local/bin/</span>   <span class="p"># or anywhere on PATH</span>
+
+<span class="p"># verify</span>
+<span class="c">trackly --version</span>
+<span class="o m">trackly 0.1.0</span></pre>
+    </div>
+  </section>
+
+  <!-- USAGE / QUICKSTART -->
+  <section id="usage">
+    <div class="eyebrow">Quickstart</div>
+    <h2>From zero to a report</h2>
+    <p class="sub">Run these inside any project. This is the whole loop.</p>
+    <div class="terminal">
+      <div class="term-bar"><i></i><i></i><i></i><span>~/my-project</span></div>
+<pre class="term"><span class="c">trackly init</span>
+<span class="g">✓</span> <span class="o">initialised .trackly and seeded 7 task(s) from</span> <span class="o">plan.md</span>
+
+<span class="c">trackly task done t4 --evidence "abc1234 charge endpoint"</span>
+<span class="g">✓</span> <span class="o">t4 → ● Done</span>
+
+<span class="c">trackly status</span>
+<span class="o">  Payments Service · main · 2026-07-15</span>
+<span class="o">  <span class="b">50.0%</span>  ████████████░░░░░░░░░░░░  7 items</span>
+<span class="o">  <span class="g">3 done</span>   <span class="y">1 partial</span>   <span class="b">1 in progress</span>   <span class="m">2 open</span></span>
+
+<span class="o">  <span class="b">Phase 1 — Foundations</span> <span class="m">67%</span></span>
+<span class="o">    <span class="g">●</span> <span class="m">t1</span>  Scaffold the service</span>
+<span class="o">    <span class="g">●</span> <span class="m">t2</span>  Wire the database</span>
+<span class="o">    <span class="b">◔</span> <span class="m">t3</span>  Set up CI</span>
+
+<span class="c">trackly report --subtitle "Acme Payments"</span>
+<span class="g">✓</span> <span class="o">wrote trackly-report.html — open it and Print → Save as PDF.</span></pre>
+    </div>
+  </section>
+
+  <!-- COMMANDS / CLI API -->
+  <section id="commands">
+    <div class="eyebrow">CLI reference · the API</div>
+    <h2>Every command</h2>
+    <p class="sub">An agent that can run a shell can drive all of this. So can you.</p>
+    <div class="table-scroll">
+    <table class="table">
+      <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td><code>trackly init</code></td><td>Create <code>.trackly/</code>, seeding a plan from an existing doc if one is found.</td></tr>
+        <tr><td><code>trackly plan set &lt;file|-&gt;</code></td><td>Replace the plan from a markdown checklist or JSON (<code>-</code> = stdin).</td></tr>
+        <tr><td><code>trackly plan add "&lt;title&gt;"</code></td><td>Append one task. Flags: <code>--group</code>, <code>--weight</code>.</td></tr>
+        <tr><td><code>trackly task done &lt;id&gt;</code></td><td>Mark a task done. Also: <code>partial</code>, <code>start</code>, <code>block</code>, <code>open</code>. Flag: <code>--evidence</code>.</td></tr>
+        <tr><td><code>trackly status</code></td><td>Print the terminal scoreboard — %, done/partial/open, grouped.</td></tr>
+        <tr><td><code>trackly report</code></td><td>Write a print-ready HTML report. Flags: <code>--out</code>, <code>--subtitle</code>.</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <!-- FORMAT + SCORING -->
+  <section id="format">
+    <div class="eyebrow">Plan format &amp; scoring</div>
+    <h2>Ordinary markdown. Nothing new to learn.</h2>
+    <div class="two">
+      <div class="panel">
+        <h3>Plan format</h3>
+<pre class="block"><span class="g-mut"># Payments Service</span>
+
+<span class="g-mut">## Phase 1 — Foundations</span>
+- [x] Scaffold the service   <span class="g-mut">← done</span>
+- [/] Set up CI              <span class="g-mut">← in progress</span>
+- [ ] Write the docs         <span class="g-mut">← open</span>
+
+<span class="g-mut">## Phase 2 — Core flows</span>
+- [~] Webhook receiver       <span class="g-mut">← partial</span>
+- [-] Fraud check            <span class="g-mut">← blocked</span></pre>
+        <div class="legend-row">
+          <span class="g-done"><b>[x]</b> done</span>
+          <span class="g-mut"><b>[ ]</b> open</span>
+          <span class="b"><b>[/]</b> in progress</span>
+          <span class="g-part"><b>[~]</b> partial</span>
+          <span class="g-block"><b>[-]</b> blocked</span>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Scoring — line-weighted, half-credit partials</h3>
+        <pre class="block formula">percent = Σ(credit × weight) / Σ(weight) × 100
+
+credit:  done = 1.0
+         partial = 0.5
+         open / in&#8209;progress / blocked = 0</pre>
+        <p style="color:var(--muted); font-size:14px; margin:14px 0 0;">
+          Every task defaults to weight&nbsp;1; bump <code>--weight</code> for larger items.
+          The same method noted in the reference report: <em>"overall (half-credit partials)."</em>
+          Treat the % as a rough directional signal, not a precise measure of effort.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOOLS / BUILT WITH -->
+  <section id="built">
+    <div class="eyebrow">Under the hood</div>
+    <h2>Built with</h2>
+    <p class="sub">A Rust workspace so one engine backs every surface — the CLI today, an MCP server and desktop app next.</p>
+    <div class="tools">
+      <div class="tool"><div class="t">Rust</div><div class="d">core engine &amp; CLI</div></div>
+      <div class="tool"><div class="t">clap</div><div class="d">command parsing</div></div>
+      <div class="tool"><div class="t">serde / serde_json</div><div class="d">plan &amp; state I/O</div></div>
+      <div class="tool"><div class="t">chrono</div><div class="d">timestamps &amp; snapshots</div></div>
+      <div class="tool"><div class="t">Tauri <span class="g-mut">(planned)</span></div><div class="d">the desktop app</div></div>
+      <div class="tool"><div class="t">GitHub Actions</div><div class="d">fmt · clippy · test CI</div></div>
+    </div>
+    <div class="two" style="margin-top:20px;">
+      <div class="panel">
+        <h3>Repository layout</h3>
+<pre class="block">crates/
+  trackly-core/   <span class="g-mut"># model, store, scoring,</span>
+                  <span class="g-mut"># parsing, report — UI-agnostic</span>
+  trackly-cli/    <span class="g-mut"># the `trackly` command</span>
+src-tauri/, src/  <span class="g-mut"># future desktop app</span></pre>
+      </div>
+      <div class="panel">
+        <h3>What's stored — <code>.trackly/</code></h3>
+<pre class="block">.trackly/plan.json      <span class="g-mut"># the plan (source of truth)</span>
+.trackly/history.jsonl  <span class="g-mut"># append-only snapshots</span>
+                        <span class="g-mut"># (the trend over time)</span></pre>
+        <p style="color:var(--muted); font-size:14px; margin:12px 0 0;">Both are human-readable. Commit them to version the plan and its history.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROADMAP -->
+  <section id="roadmap">
+    <div class="eyebrow">Roadmap</div>
+    <h2>Where it's going</h2>
+    <div class="road">
+      <div class="r"><span class="pill now">NOW</span><div><div class="t">v0.1 — the CLI</div><div class="d">Plan capture, task tracking, terminal status, HTML/PDF report.</div></div></div>
+      <div class="r"><span class="pill next">NEXT</span><div><div class="t">MCP server</div><div class="d">A thin wrapper over the core so agents call <code>set_plan</code> / <code>update_task</code> natively.</div></div></div>
+      <div class="r"><span class="pill next">NEXT</span><div><div class="t">Prebuilt binaries</div><div class="d">Cross-platform releases + <code>brew</code>/<code>npx</code> — install with zero Rust.</div></div></div>
+      <div class="r"><span class="pill later">LATER</span><div><div class="t">Git as evidence</div><div class="d">An opt-in post-commit hook that auto-snapshots and links commit hashes to tasks.</div></div></div>
+      <div class="r"><span class="pill later">LATER</span><div><div class="t">The "like GitHub" desktop app</div><div class="d">A machine-wide view that discovers all your Trackly repos and exports reports.</div></div></div>
+    </div>
+  </section>
+
+  <!-- CONTRIBUTE -->
+  <section id="contribute">
+    <div class="eyebrow">Contributing</div>
+    <h2>Built for collaboration</h2>
+    <p class="sub">Contributions of every size are welcome — from typo fixes to whole new surfaces. CI holds every PR to the same bar.</p>
+    <div class="two">
+      <div class="panel">
+        <h3>Get set up</h3>
+<pre class="block"><span class="g-mut"># needs the Rust toolchain (stable)</span>
+git clone https://github.com/vehutech/trackly
+cd trackly
+cargo build
+cargo test
+cargo run -p trackly-cli -- --help</pre>
+      </div>
+      <div class="panel">
+        <h3>Before you open a PR</h3>
+<pre class="block">cargo fmt --all
+cargo clippy --all-targets
+cargo test</pre>
+        <p style="color:var(--muted); font-size:14px; margin:12px 0 0;">
+          See <a href="https://github.com/vehutech/trackly/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a> for the project layout,
+          the "core vs. cli" rule, and a good-first-issues list. All contributors follow the
+          <a href="https://github.com/vehutech/trackly/blob/main/CODE_OF_CONDUCT.md">Code of Conduct</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CENTER CTA -->
+  <div class="center-cta">
+    <h2>Give your agent a scoreboard.</h2>
+    <p class="sub">Open source, MIT-licensed, and ready to hack on.</p>
+    <div class="cta">
+      <a class="btn" href="https://github.com/vehutech/trackly">View on GitHub</a>
+      <a class="btn ghost" href="#install">Install</a>
+    </div>
+  </div>
+
+</div>
+
+<footer class="site">
+  <div class="wrap foot-inner">
+    <div><span class="brand" style="font-size:15px;"><span class="dot"></span> Trackly</span> — agent-native progress tracking.</div>
+    <div>MIT © 2026 Trackly contributors · <a href="https://github.com/vehutech/trackly">github.com/vehutech/trackly</a></div>
+  </div>
+</footer>
+
+<script>
+  // Theme toggle: persist choice, stamp data-theme so it wins over the media query.
+  (function () {
+    var root = document.documentElement;
+    var saved = localStorage.getItem('trackly-theme');
+    if (saved) root.setAttribute('data-theme', saved);
+    document.getElementById('theme').addEventListener('click', function () {
+      var isDark = matchMedia('(prefers-color-scheme: dark)').matches;
+      var current = root.getAttribute('data-theme') || (isDark ? 'dark' : 'light');
+      var next = current === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      localStorage.setItem('trackly-theme', next);
+    });
+  })();
+</script>
+</body>
+</html>
