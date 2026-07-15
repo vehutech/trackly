@@ -13,9 +13,10 @@ use chrono::Utc;
 use clap::{Parser, Subcommand};
 use serde::Deserialize;
 
+use trackly_core::git::{self, CommitInfo, RepoInfo};
 use trackly_core::model::{Evidence, Plan, Status, Task};
 use trackly_core::report::{render_html, ReportMeta};
-use trackly_core::{find_seed_doc, git::RepoInfo, parse, Store};
+use trackly_core::{find_seed_doc, observe, parse, Store};
 
 #[derive(Parser)]
 #[command(
@@ -49,6 +50,23 @@ enum Command {
         #[arg(long)]
         subtitle: Option<String>,
     },
+    /// Record a commit as evidence against tasks it references (used by the git hook).
+    Observe {
+        /// Commit to read (default HEAD).
+        #[arg(long, default_value = "HEAD")]
+        commit: String,
+    },
+    /// Manage the git post-commit hook that runs `observe` automatically.
+    #[command(subcommand)]
+    Hook(HookCmd),
+}
+
+#[derive(Subcommand)]
+enum HookCmd {
+    /// Install the post-commit hook into this repo's `.git/hooks`.
+    Install,
+    /// Remove Trackly's post-commit hook.
+    Uninstall,
 }
 
 #[derive(Subcommand)]
@@ -132,6 +150,9 @@ fn run() -> Result<()> {
         }
         Command::Status => cmd_status(),
         Command::Report { out, subtitle } => cmd_report(out, subtitle),
+        Command::Observe { commit } => cmd_observe(&commit),
+        Command::Hook(HookCmd::Install) => cmd_hook_install(),
+        Command::Hook(HookCmd::Uninstall) => cmd_hook_uninstall(),
     }
 }
 
@@ -333,6 +354,118 @@ fn cmd_report(out: PathBuf, subtitle: Option<String>) -> Result<()> {
         ui::green("✓"),
         ui::bold(&out.display().to_string())
     );
+    Ok(())
+}
+
+/// Read a commit and apply its task references. Quiet when there's nothing to do,
+/// so it's safe to wire into a git hook that runs on every commit.
+fn cmd_observe(commit_ref: &str) -> Result<()> {
+    // No store or no plan yet → nothing to observe; succeed silently (hook-friendly).
+    let Some(store) = Store::discover(&std::env::current_dir()?) else {
+        return Ok(());
+    };
+    let Some(mut plan) = store.load_plan()? else {
+        return Ok(());
+    };
+    let Some(commit) = CommitInfo::lookup(store.repo_root(), commit_ref) else {
+        return Ok(());
+    };
+
+    let changes = observe::apply_commit(&mut plan, &commit);
+    if changes.is_empty() {
+        return Ok(());
+    }
+    plan.updated_at = Utc::now();
+    store.save_plan(&plan)?;
+    println!(
+        "{} trackly: {} from {}",
+        ui::green("✓"),
+        changes.join(", "),
+        ui::dim(&commit.short)
+    );
+    Ok(())
+}
+
+const HOOK_MARKER: &str = "trackly observe";
+const HOOK_BODY: &str = "#!/bin/sh\n\
+# Trackly post-commit hook — records each commit as evidence against the tasks\n\
+# it references. Managed by `trackly hook install`; safe to delete.\n\
+command -v trackly >/dev/null 2>&1 || exit 0\n\
+trackly observe || true\n\
+exit 0\n";
+
+fn cmd_hook_install() -> Result<()> {
+    let store = open_store_or_init()?;
+    let hooks = git::hooks_dir(store.repo_root())
+        .with_context(|| "not a git repository — `git init` first".to_string())?;
+    std::fs::create_dir_all(&hooks).with_context(|| format!("creating {}", hooks.display()))?;
+    let hook_path = hooks.join("post-commit");
+
+    if hook_path.exists() {
+        let existing = std::fs::read_to_string(&hook_path).unwrap_or_default();
+        if existing.contains(HOOK_MARKER) {
+            println!("{} post-commit hook already installed.", ui::dim("·"));
+            return Ok(());
+        }
+        // Don't clobber a hook we didn't write — tell the user how to add ours.
+        println!(
+            "{} a post-commit hook already exists at {}.",
+            ui::yellow("!"),
+            hook_path.display()
+        );
+        println!("  add this line to it to enable Trackly:");
+        println!("    {}", ui::bold("trackly observe || true"));
+        return Ok(());
+    }
+
+    std::fs::write(&hook_path, HOOK_BODY)
+        .with_context(|| format!("writing {}", hook_path.display()))?;
+    make_executable(&hook_path)?;
+    println!(
+        "{} installed post-commit hook at {}",
+        ui::green("✓"),
+        ui::bold(&hook_path.display().to_string())
+    );
+    println!(
+        "  commits that mention a task id (e.g. {}) now auto-record evidence.",
+        ui::bold("\"closes t3\"")
+    );
+    Ok(())
+}
+
+fn cmd_hook_uninstall() -> Result<()> {
+    let store = open_store()?;
+    let hooks =
+        git::hooks_dir(store.repo_root()).with_context(|| "not a git repository".to_string())?;
+    let hook_path = hooks.join("post-commit");
+    if !hook_path.exists() {
+        println!("{} no post-commit hook to remove.", ui::dim("·"));
+        return Ok(());
+    }
+    let existing = std::fs::read_to_string(&hook_path).unwrap_or_default();
+    if !existing.contains(HOOK_MARKER) {
+        bail!(
+            "the post-commit hook at {} wasn't installed by Trackly — leaving it untouched",
+            hook_path.display()
+        );
+    }
+    std::fs::remove_file(&hook_path)
+        .with_context(|| format!("removing {}", hook_path.display()))?;
+    println!("{} removed Trackly's post-commit hook.", ui::green("✓"));
+    Ok(())
+}
+
+#[cfg(unix)]
+fn make_executable(path: &std::path::Path) -> Result<()> {
+    use std::os::unix::fs::PermissionsExt;
+    let mut perms = std::fs::metadata(path)?.permissions();
+    perms.set_mode(0o755);
+    std::fs::set_permissions(path, perms)?;
+    Ok(())
+}
+
+#[cfg(not(unix))]
+fn make_executable(_path: &std::path::Path) -> Result<()> {
     Ok(())
 }
 

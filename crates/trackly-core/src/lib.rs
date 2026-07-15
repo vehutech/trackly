@@ -7,6 +7,7 @@
 
 pub mod git;
 pub mod model;
+pub mod observe;
 pub mod parse;
 pub mod report;
 pub mod score;

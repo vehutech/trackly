@@ -123,6 +123,31 @@ trackly task block   t7 --evidence "waiting on vendor API keys"
 | `trackly task done\|partial\|start\|block\|open <id> [--evidence <note>]` | Change a task's status. |
 | `trackly status` | Print the terminal scoreboard (%, done/partial/open, by group). |
 | `trackly report [--out FILE] [--subtitle "Org"]` | Write a print-ready HTML report. |
+| `trackly hook install` / `uninstall` | Add/remove the git post-commit hook (see below). |
+
+## Git as evidence
+
+Trackly can read your commits and record progress automatically — reconstructing the
+"when did this get done" timeline straight from git history. Turn it on once per repo:
+
+```sh
+trackly hook install
+```
+
+Now, whenever a commit **mentions a task id**, the post-commit hook attaches that commit
+(short hash + subject) as evidence and advances the task:
+
+```sh
+git commit -m "wip: sketch out t1 charge handler"   # → t1 becomes in progress
+git commit -m "closes t2 and t3: refunds + webhook"  # → t2, t3 become done
+```
+
+- A **completion word** (`close(s)`, `fix(es)`, `done`, `resolve(s)`, `finish`, `ship`, …)
+  marks the referenced tasks **done**; a bare mention nudges an open task to **in progress**.
+- It's **conservative and idempotent** — it only touches tasks the commit names, never
+  clobbers a hook it didn't write, and re-running on the same commit changes nothing.
+- The hook is a plain `.git/hooks/post-commit` script; `trackly hook uninstall` removes it,
+  and it never blocks a commit (even if `trackly` isn't installed).
 
 ## Native agent integration (MCP)
 
@@ -251,8 +276,8 @@ front doors.
 - **Done — the `trackly` CLI**: plan capture, status, HTML/PDF report.
 - **Done — prebuilt binaries**: cross-platform releases + one-line installer, zero Rust.
 - **Done — MCP server**: agents call `set_plan` / `update_task` natively.
-- **Next — git as evidence**: an opt-in post-commit hook that auto-snapshots and links
-  commit hashes/dates to tasks.
+- **Done — git as evidence**: an opt-in post-commit hook that links commit hashes to
+  the tasks they reference.
 - **Next — Homebrew tap + `trackly self-update`** for effortless CLI upgrades.
 - **Later — the "like GitHub" desktop app**: the Tauri app becomes a machine-wide view
   that discovers all your Trackly repos, shows dashboards, and exports reports.
