@@ -1,72 +1,107 @@
-// src/App.tsx
+import { useCallback, useEffect, useState } from 'react';
+import './styles.css';
+import { api } from './api';
+import type { ProjectSummary } from './types';
+import { Sidebar } from './components/Sidebar';
+import { Overview } from './components/Overview';
+import { ProjectView } from './components/ProjectView';
 
-import React, { useEffect, useState } from 'react';
-import { useStore } from './store/useStore';
-import { Dashboard } from './components/Dashboard';
-import { NewProjectModal } from './components/NewProjectModal';
-import { WorkSessionModal } from './components/WorkSessionModal';
-import { ProgressCheckModal } from './components/ProgressCheckModal';
-import { listen } from '@tauri-apps/api/event';
-import './App.css';
+export default function App() {
+  const [projects, setProjects] = useState<ProjectSummary[]>([]);
+  const [roots, setRoots] = useState<string[]>([]);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [adding, setAdding] = useState(false);
+  const [newRoot, setNewRoot] = useState('');
 
-const App: React.FC = () => {
-  const { loadProjects, checkOnlineStatus, currentSession } = useStore();
-  const [showNewProject, setShowNewProject] = useState(false);
-  const [showWorkSession, setShowWorkSession] = useState(false);
-  const [showProgressCheck, setShowProgressCheck] = useState(false);
+  const rescan = useCallback(async () => {
+    setLoading(true);
+    try {
+      const list = await api.listProjects();
+      setProjects(list);
+      setSelected((cur) => (cur && list.some((p) => p.path === cur) ? cur : null));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    // Load initial data
-    loadProjects();
-    checkOnlineStatus();
+    api.getRoots().then(setRoots);
+    rescan();
+  }, [rescan]);
 
-    // Check online status every minute
-    const onlineInterval = setInterval(checkOnlineStatus, 60000);
+  async function addRoot() {
+    const path = newRoot.trim();
+    if (!path) return;
+    const updated = await api.addRoot(path);
+    setRoots(updated);
+    setNewRoot('');
+    setAdding(false);
+    rescan();
+  }
 
-    // Listen for activity prompts from Rust backend
-    const unlisten = listen('prompt_user', (event) => {
-      const data = event.payload as { type: string };
-      
-      if (data.type === 'start_session' && !currentSession) {
-        setShowWorkSession(true);
-      } else if (data.type === 'check_progress' && currentSession) {
-        setShowProgressCheck(true);
-      }
-    });
-
-    return () => {
-      clearInterval(onlineInterval);
-      unlisten.then(fn => fn());
-    };
-  }, [loadProjects, checkOnlineStatus, currentSession]);
+  async function dropRoot(path: string) {
+    setRoots(await api.removeRoot(path));
+    rescan();
+  }
 
   return (
     <div className="app">
-      <Dashboard 
-        onNewProject={() => setShowNewProject(true)}
-        onStartWork={() => setShowWorkSession(true)}
+      <Sidebar
+        projects={projects}
+        selected={selected}
+        onSelect={setSelected}
+        onHome={() => setSelected(null)}
+        loading={loading}
       />
 
-      <NewProjectModal
-        isOpen={showNewProject}
-        onClose={() => setShowNewProject(false)}
-      />
+      <main className="content">
+        <div className="topbar">
+          <div className="roots">
+            {roots.map((r) => (
+              <span className="root-chip" key={r} title={r}>
+                {shorten(r)}
+                <button className="chip-x" onClick={() => dropRoot(r)} title="Remove folder">×</button>
+              </span>
+            ))}
+          </div>
 
-      <WorkSessionModal
-        isOpen={showWorkSession}
-        onClose={() => setShowWorkSession(false)}
-      />
+          <div className="actions">
+            {adding ? (
+              <div className="add-row">
+                <input
+                  autoFocus
+                  className="add-input"
+                  placeholder="/path/to/folder"
+                  value={newRoot}
+                  onChange={(e) => setNewRoot(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && addRoot()}
+                />
+                <button className="btn" onClick={addRoot}>Add</button>
+                <button className="btn ghost" onClick={() => setAdding(false)}>Cancel</button>
+              </div>
+            ) : (
+              <button className="btn ghost" onClick={() => setAdding(true)}>+ Add folder</button>
+            )}
+            <button className="btn ghost" onClick={rescan} disabled={loading}>
+              {loading ? 'Scanning…' : '↻ Rescan'}
+            </button>
+          </div>
+        </div>
 
-      <ProgressCheckModal
-        isOpen={showProgressCheck}
-        onClose={() => setShowProgressCheck(false)}
-        onSwitch={() => {
-          setShowProgressCheck(false);
-          setShowWorkSession(true);
-        }}
-      />
+        {api.isDemo && (
+          <div className="demo-banner">
+            Demo data — run inside the Trackly desktop app to see your real repos.
+          </div>
+        )}
+
+        {selected ? <ProjectView path={selected} /> : <Overview projects={projects} onSelect={setSelected} />}
+      </main>
     </div>
   );
-};
+}
 
-export default App;
+function shorten(path: string): string {
+  const parts = path.split('/').filter(Boolean);
+  return parts.length <= 2 ? path : `…/${parts.slice(-2).join('/')}`;
+}

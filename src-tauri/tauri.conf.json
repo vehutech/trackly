@@ -24,8 +24,10 @@
     "windows": [
       {
         "title": "Trackly",
-        "width": 800,
-        "height": 600
+        "width": 1160,
+        "height": 760,
+        "minWidth": 880,
+        "minHeight": 560
       }
     ],
     "security": {

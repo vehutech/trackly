@@ -186,6 +186,28 @@ these tools:
 Now the agent hands over its plan the moment it forms one, and marks tasks as it works —
 no shell calls, no reminders.
 
+## Desktop app
+
+The "like GitHub" view: a native desktop app (Tauri + React) that discovers every repo on
+your machine with a `.trackly/` store, shows a dashboard of them, and drills into any one
+for its trend line and task detail — with one-click report export. Same `trackly-core`
+engine as the CLI, so the numbers always match.
+
+<p align="center">
+  <img src="docs/screenshots/desktop.png" alt="Trackly desktop app — a dashboard of tracked repos with completion rings" width="820">
+</p>
+
+Run it from source (needs the Rust toolchain + Node):
+
+```sh
+npm install
+npm run tauri dev      # launches the app
+npm run tauri build    # produces a native installer for your OS
+```
+
+Add a folder (Trackly scans it for tracked repos), click a project, and export its report.
+Prebuilt desktop installers are the next step on the roadmap.
+
 ## Plan format
 
 Trackly reads ordinary markdown checklists — nothing new to learn:
@@ -266,10 +288,10 @@ A Rust workspace so one engine backs every surface:
   HTML report renderer. UI-agnostic.
 - **`crates/trackly-cli`** — the `trackly` command.
 - **`crates/trackly-mcp`** — the `trackly-mcp` MCP server (agent integration).
-- **`src-tauri` + `src`** — the future desktop app (see roadmap).
+- **`src-tauri` + `src`** — the desktop app (Rust backend + React frontend).
 
-Both the CLI and the MCP server are thin shells over `trackly-core` — one engine, three
-front doors.
+The CLI, the MCP server, and the desktop backend are all thin shells over `trackly-core`
+— one engine, many front doors.
 
 ## Roadmap
 
@@ -278,9 +300,10 @@ front doors.
 - **Done — MCP server**: agents call `set_plan` / `update_task` natively.
 - **Done — git as evidence**: an opt-in post-commit hook that links commit hashes to
   the tasks they reference.
+- **Done — the "like GitHub" desktop app**: a machine-wide view that discovers all your
+  Trackly repos, shows dashboards, and exports reports (run via `npm run tauri dev`).
 - **Next — Homebrew tap + `trackly self-update`** for effortless CLI upgrades.
-- **Later — the "like GitHub" desktop app**: the Tauri app becomes a machine-wide view
-  that discovers all your Trackly repos, shows dashboards, and exports reports.
+- **Next — prebuilt desktop installers** so the app installs without a toolchain.
 
 ## License
 

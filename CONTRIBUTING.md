@@ -30,7 +30,8 @@ crates/
   trackly-core/   # plan model, store, scoring, markdown parsing, HTML report — UI-agnostic
   trackly-cli/    # the `trackly` command (thin shell over the core)
   trackly-mcp/    # the `trackly-mcp` MCP server (thin shell over the core)
-src-tauri/, src/  # the future "like GitHub" desktop app (see the roadmap in the README)
+src-tauri/        # the desktop app's Rust backend (Tauri; depends on trackly-core)
+src/              # the desktop app's React frontend
 ```
 
 **Rule of thumb:** logic that more than one front door would need belongs in
