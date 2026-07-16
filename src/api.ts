@@ -2,7 +2,7 @@
 // browser (e.g. `vite dev` for UI work) they fall back to mock data so the app renders.
 
 import { invoke } from '@tauri-apps/api/core';
-import type { ProjectSummary, ProjectDetail } from './types';
+import type { ProjectSummary, ProjectDetail, UpdateInfo } from './types';
 
 const inTauri =
   typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
@@ -32,6 +32,12 @@ export const api = {
     call<string>('export_report', { path, subtitle }, () => `${path}/trackly-report.html`),
 
   openPath: (path: string) => call<void>('open_path', { path }, () => undefined),
+
+  // Auto-update. Returns null when up to date; rejects if the updater isn't
+  // configured yet (see UPDATER.md) — callers treat both as "nothing to do".
+  checkUpdate: () => call<UpdateInfo | null>('check_update', {}, () => null),
+
+  installUpdate: () => call<void>('install_update', {}, () => undefined),
 };
 
 // ---- mock data (demo mode only) ----

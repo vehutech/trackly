@@ -36,3 +36,8 @@ export interface ProjectDetail {
   groups: GroupView[];
   history: SnapshotView[];
 }
+
+export interface UpdateInfo {
+  version: string;
+  notes?: string | null;
+}

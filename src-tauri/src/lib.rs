@@ -287,10 +287,50 @@ fn open_path(app: tauri::AppHandle, path: String) -> Result<(), String> {
         .map_err(|e| e.to_string())
 }
 
+// ============ auto-update ============
+// Wired but inert until the updater is configured (see UPDATER.md): without a
+// `plugins.updater` config, `check_update` returns Err and the UI shows no banner.
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct UpdateInfo {
+    version: String,
+    notes: Option<String>,
+}
+
+/// Check the release feed for a newer signed build. `Ok(None)` = up to date;
+/// `Err` = updater not configured yet (the UI treats both as "nothing to do").
+#[tauri::command]
+async fn check_update(app: tauri::AppHandle) -> Result<Option<UpdateInfo>, String> {
+    use tauri_plugin_updater::UpdaterExt;
+    let updater = app.updater().map_err(|e| e.to_string())?;
+    let update = updater.check().await.map_err(|e| e.to_string())?;
+    Ok(update.map(|u| UpdateInfo {
+        version: u.version.clone(),
+        notes: u.body.clone(),
+    }))
+}
+
+/// Download and install the pending update, then restart the app.
+#[tauri::command]
+async fn install_update(app: tauri::AppHandle) -> Result<(), String> {
+    use tauri_plugin_updater::UpdaterExt;
+    let updater = app.updater().map_err(|e| e.to_string())?;
+    let Some(update) = updater.check().await.map_err(|e| e.to_string())? else {
+        return Err("no update available".to_string());
+    };
+    update
+        .download_and_install(|_downloaded, _total| {}, || {})
+        .await
+        .map_err(|e| e.to_string())?;
+    app.restart();
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
             get_roots,
             add_root,
@@ -299,6 +339,8 @@ pub fn run() {
             get_project,
             export_report,
             open_path,
+            check_update,
+            install_update,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Trackly desktop");

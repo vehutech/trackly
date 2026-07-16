@@ -76,8 +76,13 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Note: installers are unsigned. To sign, add the relevant secrets
-          # (Apple Developer ID / Windows cert) and wire them here.
+          # Auto-update signing. Empty until the secrets are set (see UPDATER.md),
+          # in which case tauri-action just builds normal unsigned installers.
+          # Once set + the updater is configured, it signs bundles and emits latest.json.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # Installer code-signing (Gatekeeper/SmartScreen) is separate; add those
+          # secrets (Apple Developer ID / Windows cert) here when you have them.
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "Trackly ${{ github.ref_name }}"

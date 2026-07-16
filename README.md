@@ -316,7 +316,10 @@ The CLI, the MCP server, and the desktop backend are all thin shells over `track
 - **Done — prebuilt desktop installers** (`.dmg` / `.msi` / `.exe` / `.AppImage` / `.deb`
   / `.rpm`) built and published on every tag.
 - **Next — Homebrew tap + `trackly self-update`** for effortless CLI upgrades.
-- **Next — code-signed installers + auto-update** via Tauri's updater.
+- **Scaffolded — desktop auto-update** via Tauri's updater (in-app "Update & restart"
+  banner + CI signing hooks); flip it on by following [UPDATER.md](UPDATER.md).
+- **Next — code-signed installers** (Apple Developer ID / Windows cert) to drop the
+  first-launch OS warnings.
 
 ## License
 

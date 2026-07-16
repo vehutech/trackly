@@ -71,6 +71,11 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fo
 .btn.primary { background: var(--brand); color: #fff; }
 .demo-banner { background: var(--pct-bg); color: var(--brand); border-bottom: 1px solid var(--line);
   padding: 8px 22px; font-size: 12.5px; }
+.update-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: var(--done-bg); color: var(--done); border-bottom: 1px solid var(--line);
+  padding: 8px 22px; font-size: 13px; }
+.update-banner .btn { padding: 5px 12px; }
+.update-err { color: var(--blocked); }
 
 /* ---- overview ---- */
 .overview { padding: 28px 26px; }

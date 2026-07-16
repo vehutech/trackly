@@ -5,6 +5,7 @@ import type { ProjectSummary } from './types';
 import { Sidebar } from './components/Sidebar';
 import { Overview } from './components/Overview';
 import { ProjectView } from './components/ProjectView';
+import { UpdateBanner } from './components/UpdateBanner';
 
 export default function App() {
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
@@ -56,6 +57,7 @@ export default function App() {
       />
 
       <main className="content">
+        <UpdateBanner />
         <div className="topbar">
           <div className="roots">
             {roots.map((r) => (
