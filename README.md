@@ -46,6 +46,12 @@ Because it snapshots state every time it's touched, Trackly also builds a histor
 
 Trackly is a single native binary. **End users never need Rust installed.**
 
+**Homebrew** (macOS / Linux) — installs the `trackly` CLI and the `trackly-mcp` server:
+
+```sh
+brew install vehutech/tap/trackly
+```
+
 **One-line install** (macOS / Linux) — downloads the latest prebuilt binary:
 
 ```sh
@@ -315,9 +321,10 @@ The CLI, the MCP server, and the desktop backend are all thin shells over `track
   Trackly repos, shows dashboards, and exports reports.
 - **Done — prebuilt desktop installers** (`.dmg` / `.msi` / `.exe` / `.AppImage` / `.deb`
   / `.rpm`) built and published on every tag.
-- **Next — Homebrew tap + `trackly self-update`** for effortless CLI upgrades.
+- **Done — Homebrew tap**: `brew install vehutech/tap/trackly`, auto-synced to each release.
 - **Scaffolded — desktop auto-update** via Tauri's updater (in-app "Update & restart"
   banner + CI signing hooks); flip it on by following [UPDATER.md](UPDATER.md).
+- **Next — `trackly self-update`** for one-command CLI upgrades.
 - **Next — code-signed installers** (Apple Developer ID / Windows cert) to drop the
   first-launch OS warnings.
 

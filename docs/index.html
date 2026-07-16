@@ -216,10 +216,13 @@ footer.site { border-top: 1px solid var(--line); padding: 40px 0; color: var(--m
       One line on macOS / Linux — or grab a prebuilt archive for any platform.</p>
     <div class="terminal">
       <div class="term-bar"><i></i><i></i><i></i><span>install — macOS / Linux</span></div>
-<pre class="term"><span class="p"># downloads the latest prebuilt binary for your platform</span>
+<pre class="term"><span class="p"># Homebrew — installs the trackly CLI and the trackly-mcp server</span>
+<span class="c">brew install vehutech/tap/trackly</span>
+
+<span class="p"># …or the one-line installer</span>
 <span class="c">curl -fsSL https://raw.githubusercontent.com/vehutech/trackly/main/scripts/install.sh | sh</span>
 
-<span class="p"># verify (installs `trackly` and the `trackly-mcp` agent server)</span>
+<span class="p"># verify</span>
 <span class="c">trackly --version</span>
 <span class="o m">trackly 0.4.0</span></pre>
     </div>
@@ -363,7 +366,7 @@ src-tauri/, src/  <span class="g-mut"># future desktop app</span></pre>
     <div class="road">
       <div class="r"><span class="pill now">NOW</span><div><div class="t">v0.1 — the CLI</div><div class="d">Plan capture, task tracking, terminal status, HTML/PDF report.</div></div></div>
       <div class="r"><span class="pill now">NOW</span><div><div class="t">MCP server</div><div class="d">Ships as <code>trackly-mcp</code> — agents (Claude Code, Cursor, Windsurf) call <code>set_plan</code> / <code>update_task</code> natively. <code>claude mcp add trackly -- trackly-mcp</code></div></div></div>
-      <div class="r"><span class="pill now">NOW</span><div><div class="t">Prebuilt binaries</div><div class="d">Cross-platform release archives for macOS, Linux &amp; Windows + a one-line installer — zero Rust. <code>brew</code>/<code>npx</code> next.</div></div></div>
+      <div class="r"><span class="pill now">NOW</span><div><div class="t">Prebuilt binaries &amp; Homebrew</div><div class="d">Cross-platform release archives for macOS, Linux &amp; Windows, a one-line installer, and <code>brew install vehutech/tap/trackly</code> — zero Rust.</div></div></div>
       <div class="r"><span class="pill now">NOW</span><div><div class="t">Git as evidence</div><div class="d">Opt-in post-commit hook: commits that mention a task id auto-record the commit as evidence and advance the task. <code>trackly hook install</code></div></div></div>
       <div class="r"><span class="pill now">NOW</span><div><div class="t">The "like GitHub" desktop app</div><div class="d">A native app (Tauri + React) that discovers every tracked repo on your machine, shows a dashboard, and exports reports — with prebuilt installers for macOS, Windows &amp; Linux on every release.</div></div></div>
     </div>
