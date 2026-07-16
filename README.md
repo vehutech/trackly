@@ -197,7 +197,19 @@ engine as the CLI, so the numbers always match.
   <img src="docs/screenshots/desktop.png" alt="Trackly desktop app — a dashboard of tracked repos with completion rings" width="820">
 </p>
 
-Run it from source (needs the Rust toolchain + Node):
+**Install** — grab a native installer from the
+[latest release](https://github.com/vehutech/trackly/releases/latest):
+
+| Platform | Installer |
+|---|---|
+| macOS (Intel + Apple Silicon) | `Trackly_<ver>_universal.dmg` |
+| Windows | `Trackly_<ver>_x64-setup.exe` (or `.msi`) |
+| Linux | `Trackly_<ver>_amd64.AppImage`, `.deb`, or `.rpm` |
+
+(Installers are currently unsigned, so macOS Gatekeeper / Windows SmartScreen may warn on
+first launch — right-click → Open on macOS, or "More info → Run anyway" on Windows.)
+
+Or run/build it from source (needs the Rust toolchain + Node):
 
 ```sh
 npm install
@@ -206,7 +218,6 @@ npm run tauri build    # produces a native installer for your OS
 ```
 
 Add a folder (Trackly scans it for tracked repos), click a project, and export its report.
-Prebuilt desktop installers are the next step on the roadmap.
 
 ## Plan format
 
@@ -301,9 +312,11 @@ The CLI, the MCP server, and the desktop backend are all thin shells over `track
 - **Done — git as evidence**: an opt-in post-commit hook that links commit hashes to
   the tasks they reference.
 - **Done — the "like GitHub" desktop app**: a machine-wide view that discovers all your
-  Trackly repos, shows dashboards, and exports reports (run via `npm run tauri dev`).
+  Trackly repos, shows dashboards, and exports reports.
+- **Done — prebuilt desktop installers** (`.dmg` / `.msi` / `.exe` / `.AppImage` / `.deb`
+  / `.rpm`) built and published on every tag.
 - **Next — Homebrew tap + `trackly self-update`** for effortless CLI upgrades.
-- **Next — prebuilt desktop installers** so the app installs without a toolchain.
+- **Next — code-signed installers + auto-update** via Tauri's updater.
 
 ## License
 
