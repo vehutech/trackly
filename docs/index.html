@@ -150,6 +150,49 @@ footer.site { border-top: 1px solid var(--line); padding: 40px 0; color: var(--m
 .center-cta { text-align: center; padding: 66px 0; }
 .center-cta h2 { margin-bottom: 8px; }
 .center-cta .sub { margin: 0 auto 24px; }
+
+/* Scroll-reveal motion */
+.reveal { opacity: 0; transform: translateY(22px);
+  transition: opacity .7s cubic-bezier(.16,.84,.44,1), transform .7s cubic-bezier(.16,.84,.44,1);
+  transition-delay: var(--d, 0s); will-change: opacity, transform; }
+.reveal.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+}
+
+/* Download */
+#download { padding: 60px 0; border-top: 1px solid var(--line); }
+.dl-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 30px; }
+@media (max-width: 900px) { .dl-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .dl-grid { grid-template-columns: 1fr; } }
+.dl-card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 26px 20px;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  transition: transform .3s cubic-bezier(.16,.84,.44,1), box-shadow .3s, border-color .3s; }
+.dl-card:nth-child(1) { --d: 0s; } .dl-card:nth-child(2) { --d: .07s; }
+.dl-card:nth-child(3) { --d: .14s; } .dl-card:nth-child(4) { --d: .21s; }
+.dl-card:hover { transform: translateY(-6px); border-color: color-mix(in srgb, var(--brand) 45%, var(--line));
+  box-shadow: 0 22px 44px -24px rgba(0,0,0,.5); transition-delay: 0s; }
+.dl-icon { width: 68px; height: 68px; border-radius: 18px; display: grid; place-items: center; margin-bottom: 16px;
+  background: linear-gradient(155deg, #ffffff, #e9edf2);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06), 0 8px 18px -12px rgba(0,0,0,.5);
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1); }
+.dl-card:hover .dl-icon { transform: scale(1.09) rotate(-3deg); }
+.dl-icon svg { width: 38px; height: 38px; display: block; }
+.dl-icon.mac svg { fill: #171717; }
+.dl-icon.win svg { fill: #0a84ff; }
+.dl-icon.cli svg { color: #1a7f37; }
+.dl-title { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; }
+.dl-sub { color: var(--muted); font-size: 12.5px; margin: 3px 0 18px; }
+.dl-links { margin-top: 4px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.dl-primary { width: 100%; }
+.dl-alts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.dl-alt { font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 7px; padding: 4px 9px;
+  transition: color .2s, border-color .2s, background .2s; }
+.dl-alt:hover { color: var(--brand); border-color: var(--brand); background: var(--pct-bg); text-decoration: none; }
+.dl-code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 7px; padding: 7px 8px; width: 100%;
+  word-break: break-all; color: var(--ink); }
+.dl-foot { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 26px; }
 </style>
 </head>
 <body>
@@ -158,8 +201,8 @@ footer.site { border-top: 1px solid var(--line); padding: 40px 0; color: var(--m
   <div class="wrap nav-inner">
     <div class="brand"><span class="dot"></span> Trackly</div>
     <nav class="nav-links">
+      <a href="#download">Download</a>
       <a href="#how">How it works</a>
-      <a href="#install">Install</a>
       <a href="#commands">Commands</a>
       <a href="#format">Plan format</a>
       <a href="#contribute">Contribute</a>
@@ -178,7 +221,7 @@ footer.site { border-top: 1px solid var(--line); padding: 40px 0; color: var(--m
     <p class="lead">Trackly rides alongside your coding agent. The moment it forms a plan, Trackly captures it —
       then measures weighted completion and turns it into a printable progress report. Silent until you call it. No nagging, no daemon.</p>
     <div class="cta">
-      <a class="btn" href="#install">Get started</a>
+      <a class="btn" href="#download">Download</a>
       <a class="btn ghost" href="https://github.com/vehutech/trackly">Star on GitHub ★</a>
     </div>
     <div class="subnote">CLI + MCP server with prebuilt binaries for macOS, Linux &amp; Windows, a git hook, and a native desktop app.</div>
@@ -191,6 +234,84 @@ footer.site { border-top: 1px solid var(--line); padding: 40px 0; color: var(--m
       <div class="step"><div class="k">3 · You</div><div class="v">Get a report</div><div class="d">terminal + printable PDF</div></div>
     </div>
   </div>
+
+  <!-- DOWNLOAD -->
+  <section id="download">
+    <div class="eyebrow reveal">Download</div>
+    <h2 class="reveal">Get Trackly for your platform</h2>
+    <p class="sub reveal">Native installers and prebuilt binaries — no toolchain required. Links point to the
+      latest release (<a href="https://github.com/vehutech/trackly/releases/latest" id="dl-version">v0.4.0</a>).</p>
+
+    <div class="dl-grid">
+      <!-- macOS -->
+      <div class="dl-card reveal">
+        <div class="dl-icon mac" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M16.365 1.43c0 1.14-.49 2.27-1.18 3.08-.74.9-1.99 1.57-2.98 1.57-.12 0-.24-.02-.31-.03-.01-.06-.04-.22-.04-.39 0-1.15.57-2.27 1.21-2.98.8-.94 2.14-1.64 3.25-1.68.03.13.05.28.05.43zM20.93 17.14c-.03.07-.46 1.58-1.52 3.12-.94 1.34-1.94 2.71-3.43 2.71-1.51 0-1.9-.88-3.63-.88-1.7 0-2.3.91-3.67.91-1.38 0-2.33-1.26-3.43-2.8C3.53 18.38 2.5 15.57 2.5 12.92c0-4.28 2.8-6.55 5.55-6.55 1.45 0 2.68.95 3.6.95.86 0 2.22-1.01 3.9-1.01.63 0 2.91.06 4.42 2.19-.12.07-2.53 1.48-2.53 4.41 0 3.39 2.98 4.6 3.06 4.62l-.07.61z"/></svg>
+        </div>
+        <div class="dl-title">macOS</div>
+        <div class="dl-sub">Universal · Intel + Apple Silicon</div>
+        <div class="dl-links">
+          <a class="btn dl-primary" data-asset="dmg" href="https://github.com/vehutech/trackly/releases/download/v0.4.0/Trackly_0.4.0_universal.dmg">Download .dmg</a>
+        </div>
+      </div>
+
+      <!-- Windows -->
+      <div class="dl-card reveal">
+        <div class="dl-icon win" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M0 3.35 9.8 2v9.44H0zM10.95 1.84 24 0v11.4H10.95zM0 12.6h9.8v9.46L0 20.7zM10.95 12.6H24V24l-13.05-1.84z"/></svg>
+        </div>
+        <div class="dl-title">Windows</div>
+        <div class="dl-sub">Windows 10 / 11 · x64</div>
+        <div class="dl-links">
+          <a class="btn dl-primary" data-asset="exe" href="https://github.com/vehutech/trackly/releases/download/v0.4.0/Trackly_0.4.0_x64-setup.exe">Download .exe</a>
+          <div class="dl-alts"><a class="dl-alt" data-asset="msi" href="https://github.com/vehutech/trackly/releases/download/v0.4.0/Trackly_0.4.0_x64_en-US.msi">.msi installer</a></div>
+        </div>
+      </div>
+
+      <!-- Linux -->
+      <div class="dl-card reveal">
+        <div class="dl-icon linux" aria-hidden="true">
+          <svg viewBox="0 0 64 64">
+            <path d="M40 44c1.6 2.2 5.4 3.4 5.9 6 .4 2-1.4 3-3.9 3H22c-2.5 0-4.3-1-3.9-3 .5-2.6 4.3-3.8 5.9-6-2.4-2.1-4-5.4-4-9.5 0-4.6 1.2-7.4 2.9-9.6 1.1-1.4 1.6-2.4 1.6-4.4v-3C24.5 11 27.8 7 32 7s7.5 4 7.5 10.5v3c0 2 .5 3 1.6 4.4C42.8 27.1 44 29.9 44 34.5c0 4.1-1.6 7.4-4 9.5z" fill="#1b1b1b"/>
+            <ellipse cx="32" cy="36" rx="7.5" ry="11" fill="#fff"/>
+            <circle cx="28.4" cy="19" r="2.3" fill="#fff"/><circle cx="35.6" cy="19" r="2.3" fill="#fff"/>
+            <circle cx="28.8" cy="19.4" r="1.1" fill="#1b1b1b"/><circle cx="35.2" cy="19.4" r="1.1" fill="#1b1b1b"/>
+            <path d="M32 21.5l3.4 2.6-3.4 2.6-3.4-2.6z" fill="#f5a623"/>
+            <ellipse cx="26" cy="50.5" rx="4.6" ry="2.4" fill="#f5a623"/><ellipse cx="38" cy="50.5" rx="4.6" ry="2.4" fill="#f5a623"/>
+          </svg>
+        </div>
+        <div class="dl-title">Linux</div>
+        <div class="dl-sub">x86_64</div>
+        <div class="dl-links">
+          <a class="btn dl-primary" data-asset="appimage" href="https://github.com/vehutech/trackly/releases/download/v0.4.0/Trackly_0.4.0_amd64.AppImage">Download .AppImage</a>
+          <div class="dl-alts">
+            <a class="dl-alt" data-asset="deb" href="https://github.com/vehutech/trackly/releases/download/v0.4.0/Trackly_0.4.0_amd64.deb">.deb</a>
+            <a class="dl-alt" data-asset="rpm" href="https://github.com/vehutech/trackly/releases/download/v0.4.0/Trackly-0.4.0-1.x86_64.rpm">.rpm</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLI + MCP -->
+      <div class="dl-card reveal">
+        <div class="dl-icon cli" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6 9l3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.5 15h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+        <div class="dl-title">CLI + MCP</div>
+        <div class="dl-sub">Prebuilt binaries · all targets</div>
+        <div class="dl-links">
+          <code class="dl-code">brew install vehutech/tap/trackly</code>
+          <div class="dl-alts">
+            <a class="dl-alt" data-asset="cli-macos-arm" href="https://github.com/vehutech/trackly/releases/download/v0.4.0/trackly-v0.4.0-aarch64-apple-darwin.tar.gz">macOS arm64</a>
+            <a class="dl-alt" data-asset="cli-macos-x64" href="https://github.com/vehutech/trackly/releases/download/v0.4.0/trackly-v0.4.0-x86_64-apple-darwin.tar.gz">macOS x64</a>
+            <a class="dl-alt" data-asset="cli-linux-x64" href="https://github.com/vehutech/trackly/releases/download/v0.4.0/trackly-v0.4.0-x86_64-unknown-linux-gnu.tar.gz">Linux x64</a>
+            <a class="dl-alt" data-asset="cli-win-x64" href="https://github.com/vehutech/trackly/releases/download/v0.4.0/trackly-v0.4.0-x86_64-pc-windows-msvc.zip">Windows x64</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="dl-foot reveal">Unsigned for now — on first launch: macOS right-click → Open; Windows "More info → Run anyway".
+      &nbsp;·&nbsp; <a href="https://github.com/vehutech/trackly/releases/latest">All releases &amp; checksums →</a></p>
+  </section>
 
   <!-- HOW -->
   <section id="how">
@@ -347,7 +468,8 @@ credit:  done = 1.0
   trackly-core/   <span class="g-mut"># model, store, scoring,</span>
                   <span class="g-mut"># parsing, report — UI-agnostic</span>
   trackly-cli/    <span class="g-mut"># the `trackly` command</span>
-src-tauri/, src/  <span class="g-mut"># future desktop app</span></pre>
+  trackly-mcp/    <span class="g-mut"># the MCP server</span>
+src-tauri/, src/  <span class="g-mut"># the desktop app</span></pre>
       </div>
       <div class="panel">
         <h3>What's stored — <code>.trackly/</code></h3>
@@ -432,6 +554,53 @@ cargo test</pre>
       root.setAttribute('data-theme', next);
       localStorage.setItem('trackly-theme', next);
     });
+  })();
+
+  // Scroll-reveal: fade/slide elements in as they enter the viewport.
+  (function () {
+    var els = document.querySelectorAll('.reveal');
+    if (!('IntersectionObserver' in window)) {
+      els.forEach(function (e) { e.classList.add('in'); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+      });
+    }, { threshold: 0.12 });
+    els.forEach(function (e) { io.observe(e); });
+  })();
+
+  // Point the download links at the latest release's assets (falls back to the
+  // hard-coded v0.4.0 URLs if the API is unavailable).
+  (function () {
+    var match = {
+      dmg: /universal\.dmg$/,
+      exe: /-setup\.exe$/,
+      msi: /\.msi$/,
+      appimage: /\.AppImage$/,
+      deb: /\.deb$/,
+      rpm: /\.rpm$/,
+      'cli-macos-arm': /aarch64-apple-darwin\.tar\.gz$/,
+      'cli-macos-x64': /x86_64-apple-darwin\.tar\.gz$/,
+      'cli-linux-x64': /x86_64-unknown-linux-gnu\.tar\.gz$/,
+      'cli-win-x64': /x86_64-pc-windows-msvc\.zip$/
+    };
+    fetch('https://api.github.com/repos/vehutech/trackly/releases/latest')
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+      .then(function (rel) {
+        var assets = rel.assets || [];
+        Object.keys(match).forEach(function (key) {
+          var a = assets.find(function (x) { return match[key].test(x.name); });
+          if (!a) return;
+          document.querySelectorAll('[data-asset="' + key + '"]').forEach(function (el) {
+            el.href = a.browser_download_url;
+          });
+        });
+        var v = document.getElementById('dl-version');
+        if (v && rel.tag_name) v.textContent = rel.tag_name;
+      })
+      .catch(function () { /* keep the v0.4.0 fallback links */ });
   })();
 </script>
 </body>
